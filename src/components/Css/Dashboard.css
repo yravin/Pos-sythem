@@ -1,0 +1,168 @@
+/* 🌟 Dashboard Styles with Glassmorphism Effect */
+.content-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  min-height: 97vh;
+  color: #fff;
+  animation: fadeIn 0.6s ease;
+  margin-left: 2%;
+  width: 1360px;
+  margin-top: 10px;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* 🌙 DARK MODE */
+.dark-mode .content-section {
+  background: linear-gradient(135deg, #1f1f1f 0%, #2c2c2c 100%);
+  color: #e5e5e5;
+}
+
+/* === Glass Card Base === */
+.glass-card {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease, background 0.4s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* 🌙 DARK MODE Glass Card */
+.dark-mode .glass-card {
+  background: rgba(30, 30, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* === Stats Cards === */
+.stats-card {
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  color: #fff;
+}
+
+.stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 60%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.stats-card:hover::before {
+  left: 100%;
+}
+
+/* Icon styles */
+.stats-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.icon-blue { color: #3b82f6; background: rgba(59, 130, 246, 0.2); }
+.icon-green { color: #22c55e; background: rgba(34, 197, 94, 0.2); }
+.icon-orange { color: #f97316; background: rgba(249, 115, 22, 0.2); }
+.icon-red { color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+
+/* === DARK MODE ICON === */
+.dark-mode .icon-blue { color: #60a5fa; background: rgba(59, 130, 246, 0.15); }
+.dark-mode .icon-green { color: #4ade80; background: rgba(34, 197, 94, 0.15); }
+.dark-mode .icon-orange { color: #fb923c; background: rgba(249, 115, 22, 0.15); }
+.dark-mode .icon-red { color: #f87171; background: rgba(239, 68, 68, 0.15); }
+
+/* Table Styles */
+.table-responsive {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table {
+  margin-bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.4s ease;
+}
+
+.table thead th {
+  background: rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+  color:#fff;
+}
+
+.table tbody td {
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 🌙 DARK MODE Table */
+.dark-mode .table {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .table thead th {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ddd;
+}
+
+.dark-mode .table tbody td {
+  background: rgba(255, 255, 255, 0.05);
+  color: #eee;
+}
+
+/* Headings */
+h2, h4 {
+  color: #fff;
+  font-weight: 600;
+  transition: color 0.4s ease;
+}
+
+.dark-mode h2,
+.dark-mode h4 {
+  color: #e5e5e5;
+}
+
+/* Badge Styles */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(34, 197, 94, 0.2) !important;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* 🌙 Dark Mode Badge */
+.dark-mode .badge {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/*======================================================================*/

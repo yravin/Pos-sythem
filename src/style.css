@@ -1,0 +1,26 @@
+
+h1{
+  color: red;
+  font-size: 20px;
+}
+body{
+  background-color: white
+}
+.f{
+  border: 1px solid  black;
+  width: 200px;
+  height: 250px;
+  background-color: rgba(255, 0, 0, 0.042);
+  border-radius: 20px;
+}
+input{
+  margin-top: 10px;
+  background-color: white;
+  border-radius: 5px;
+  color: black;
+  border: 1px solid  black;
+}
+a{
+  margin: 40px;
+  font-size: 10px;
+}

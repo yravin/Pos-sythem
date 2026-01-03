@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
+        
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: 'Kantumruy Pro', 'Khmer OS', sans-serif;
+          
+          ;
+        }
+
+        .login-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          width: 140vh;
+          padding: 20px;
+        }
+
+        .login-card {
+          width: 100%;
+          max-width: 420px;
+          background: #fff;
+          border-radius: 20px;
+          padding: 40px 35px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .login-title {
+          text-align: center;
+          color: #6C63FF;
+          font-size: 28px;
+          font-weight: 700;
+          margin-bottom: 35px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .form-group {
+          margin-bottom: 25px;
+        }
+
+        .form-label {
+          display: block;
+          font-weight: 500;
+          color: #333;
+          margin-bottom: 8px;
+          font-size: 15px;
+        }
+
+        .form-input {
+          width: 100%;
+          padding: 12px 15px;
+          border: 2px solid #e0e0e0;
+          border-radius: 10px;
+          font-size: 15px;
+          transition: all 0.3s ease;
+          font-family: 'Kantumruy Pro', sans-serif;
+        }
+
+        .form-input:focus {
+          outline: none;
+          border-color: #6C63FF;
+          box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.1);
+        }
+
+        .password-wrapper {
+          position: relative;
+        }
+
+        .password-toggle {
+          position: absolute;
+          right: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          cursor: pointer;
+          color: #6C63FF;
+          transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+          color: #9b5de5;
+        }
+
+        .submit-btn {
+          width: 100%;
+          padding: 14px;
+          background: linear-gradient(90deg, #6C63FF, #9b5de5);
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(108, 99, 255, 0.4);
+        }
+
+        .submit-btn:active {
+          transform: translateY(0);
+        }
+
+        .footer-text {
+          text-align: center;
+          margin-top: 25px;
+          color: #999;
+          font-size: 13px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+          .login-card {
+            padding: 30px 25px;
+          }
+
+          .login-title {
+            font-size: 24px;
+          }
+        }
