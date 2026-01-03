@@ -51,7 +51,7 @@ const Products = ({ products, onAddProduct, onDeleteProduct, onEditProduct }) =>
       <td>
         {product.product_image ? (
           <img
-            src={`http://127.0.0.1:8000${product.product_image}`}
+            src={`https://backend-pos-api.onrender.com${product.product_image}`}
             alt={product.product_name}
             style={{
               width: '50px',

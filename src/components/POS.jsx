@@ -43,7 +43,7 @@ const POS = ({ products, cart, onAddToCart, onUpdateCartQuantity, onRemoveFromCa
                   onClick={() => onAddToCart(product.product_id)}
                 >
                   <img
-                    src={`http://127.0.0.1:8000${product.product_image}`}
+                    src={`https://backend-pos-api.onrender.com${product.product_image}`}
                     alt={product.product_name}
                     className="card-img-top"
                     style={{ height: '150px', objectFit: 'cover' }}

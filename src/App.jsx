@@ -24,7 +24,7 @@ function App() {
   // Fetch all products
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/product/');
+      const response = await fetch('https://backend-pos-api.onrender.com/api/product/');
       const data = await response.json();
       setProducts(data);
     } catch (error) {
@@ -39,7 +39,7 @@ function App() {
   // Add product
   const addProduct = async (formData) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/product/', {
+      const response = await fetch('https://backend-pos-api.onrender.com/api/product/', {
         method: 'POST',
         body: formData
       });
@@ -61,7 +61,7 @@ function App() {
   // Edit product
   const editProduct = async (product) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/product/${product.product_id}/`, {
+      const response = await fetch(`https://backend-pos-api.onrender.com/api/product/${product.product_id}/`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,7 +93,7 @@ function App() {
     if (!window.confirm("តេីអ្នកប្រាកដថាចង់លុបផលិតផលមែនទេ?")) return;
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/product/${product_id}/`, { method: 'DELETE' });
+      const response = await fetch(`https://backend-pos-api.onrender.com/api/product/${product_id}/`, { method: 'DELETE' });
       if (response.ok) setProducts(products.filter(p => p.product_id !== product_id));
       else Swal.fire("❌ Failed", "Could not delete product.", "error");
     } catch (error) {
@@ -169,7 +169,7 @@ const onSubmitOrder = async () => {
       }))
     };
 
-    const res = await fetch("http://127.0.0.1:8000/api/make-order/", {
+    const res = await fetch("https://backend-pos-api.onrender.com/api/make-order/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData),
