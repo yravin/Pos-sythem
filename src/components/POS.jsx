@@ -73,7 +73,7 @@ const POS = ({ products, cart, onAddToCart, onUpdateCartQuantity, onRemoveFromCa
                   <div key={item.product_id} className="cart-item mb-2">
                     <div className="d-flex align-items-center gap-2">
                       <img
-                        src={`http://127.0.0.1:8000${item.product_image}`}
+                        src={`https://backend-pos-api.onrender.com${item.product_image}`}
                         alt={item.product_name}
                         style={{
                           width: '50px',
