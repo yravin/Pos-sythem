@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Sidebar from './components/Sidebar';
@@ -12,7 +12,10 @@ import Swal from "sweetalert2";
 import LoginForm from './components/Auth/login';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem("isLoggedIn") === "true";
+  });
+
   const [products, setProducts] = useState([]);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [sales, setSales] = useState([]);
@@ -20,8 +23,6 @@ function App() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
-
-  // Fetch all products
   const fetchProducts = async () => {
     try {
       const response = await fetch('https://backend-pos-api.onrender.com/api/product/');
@@ -36,7 +37,76 @@ function App() {
     fetchProducts();
   }, []);
 
-  // Add product
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    localStorage.setItem("isLoggedIn", "true");
+  };
+
+  const handleLogout = () => {
+    Swal.fire({
+      title: 'តើអ្នកចង់ចាកចេញមែនទេ?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes',
+      cancelButtonText: 'No'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setIsLoggedIn(false);
+        localStorage.removeItem("isLoggedIn");
+        setActiveSection('dashboard');
+        setCart([]);
+      }
+    });
+  };
+
+ const addToCart = (productId) => {
+  const product = products.find(p => p.product_id === productId);
+  
+  // ១. ឆែកមើលថាផលិតផលមានក្នុងស្តុកឬអត់
+  if (!product || product.product_stock <= 0) {
+    return Swal.fire("⚠️ អស់ស្តុក", "ផលិតផលនេះអស់ពីស្តុកហើយ", "warning");
+  }
+
+  const existingItem = cart.find(item => item.product_id === productId);
+
+  if (existingItem) {
+    // ២. ឆែកមើលថា ចំនួនក្នុងរទេះ លើសពីចំនួនក្នុងស្តុកឬអត់
+    if (existingItem.order_qty < product.product_stock) {
+      setCart(cart.map(item => 
+        item.product_id === productId ? { ...item, order_qty: item.order_qty + 1 } : item
+      ));
+    } else {
+      Swal.fire("⚠️ កម្រិតស្តុក", `មិនអាចលក់លើសពីចំនួនក្នុងស្តុក (${product.product_stock}) បានទេ!`, "warning");
+    }
+  } else {
+    // បើមិនទាន់មានក្នុងរទេះ ថែមចូលថ្មី ១
+    setCart([...cart, { ...product, order_qty: 1 }]);
+  }
+};
+
+  const updateCartQuantity = (productId, change) => {
+  setCart(prevCart => 
+    prevCart.map(item => {
+      if (item.product_id === productId) {
+        const product = products.find(p => p.product_id === productId);
+        const newQuantity = item.order_qty + change;
+
+        // បើចុចដក (-) រហូតដល់ ០ គឺលុបចេញពីរទេះ
+        if (newQuantity <= 0) return null;
+
+        // ឆែកស្តុកពេលចុចថែម (+)
+        if (newQuantity > product.product_stock) {
+          Swal.fire("⚠️ អស់ស្តុក", `ស្តុកនៅសល់ត្រឹមតែ ${product.product_stock} ប៉ុណ្ណោះ!`, "warning");
+          return item; // រក្សាចំនួនដដែល មិនឱ្យថែម
+        }
+
+        return { ...item, order_qty: newQuantity };
+      }
+      return item;
+    }).filter(Boolean) // លុប item ណាដែលមានតម្លៃ null ចេញ
+  );
+};
+
   const addProduct = async (formData) => {
     try {
       const response = await fetch('https://backend-pos-api.onrender.com/api/product/', {
@@ -44,284 +114,152 @@ function App() {
         body: formData
       });
       if (response.ok) {
-        const data = await response.json();
-        setProducts([...products, data]);
+        fetchProducts();
         Swal.fire("✅ ជោគជ័យ", "ផលិតផលត្រូវបានបន្ថែម!", "success");
-      } else {
-        const err = await response.json();
-        console.error(err);
-        Swal.fire("❌ បរាជ័យ", "មិនអាចបន្ថែមផលិលផលបាន.", "error");
       }
-    } catch (error) {
-      console.error(error);
-      Swal.fire("❌ មានបញ្ហា", "ក្នុងការភ្ជាប់ទៅកាន់Server.", "error");
-    }
+    } catch (error) { console.error(error); }
   };
 
-  // Edit product
   const editProduct = async (product) => {
     try {
       const response = await fetch(`https://backend-pos-api.onrender.com/api/product/${product.product_id}/`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_name: product.product_name,
-          product_price: parseFloat(product.product_price),
-          product_stock: parseInt(product.product_stock, 10),
-          category_name: product.category_name,
-          product_status: 'new_stock'
-        })
+        body: JSON.stringify(product)
       });
-
-      if (response.ok) {
-        const updatedProduct = await response.json();
-        setProducts(products.map(p => p.product_id === product.product_id ? updatedProduct : p));
-        Swal.fire("✅ ជោគជ័យ", "ផលិតផលត្រូវបានកែប្រែ!", "success");
-      } else {
-        const err = await response.json();
-        console.error(err);
-        Swal.fire("❌ បរាជ័យ", "មិនអាចកែប្រែផលិតផលបាន.", "error");
-      }
-    } catch (error) {
-      console.error(error);
-      Swal.fire("❌ មានបញ្ហា", "មិនអាចភ្ជាប់ទៅកាន់Server.", "error");
-    }
+      if (response.ok) fetchProducts();
+    } catch (error) { console.error(error); }
   };
 
-  // Delete product
-  const deleteProduct = async (product_id) => {
-    if (!window.confirm("តេីអ្នកប្រាកដថាចង់លុបផលិតផលមែនទេ?")) return;
-
+  const deleteProduct = async (id) => {
     try {
-      const response = await fetch(`https://backend-pos-api.onrender.com/api/product/${product_id}/`, { method: 'DELETE' });
-      if (response.ok) setProducts(products.filter(p => p.product_id !== product_id));
-      else Swal.fire("❌ Failed", "Could not delete product.", "error");
-    } catch (error) {
-      console.error(error);
-      Swal.fire("❌ Error", "Cannot connect to server.", "error");
-    }
+      const response = await fetch(`https://backend-pos-api.onrender.com/api/product/${id}/`, { method: 'DELETE' });
+      if (response.ok) fetchProducts();
+    } catch (error) { console.error(error); }
   };
 
-  // Add to cart
-  const addToCart = (productId) => {
-    const product = products.find(p => p.product_id === productId);
-    if (!product) return;
-
-    const existingItem = cart.find(item => item.product_id === productId);
-    if (existingItem) {
-      if (existingItem.order_qty < product.product_stock) {
-        setCart(cart.map(item => 
-          item.product_id === productId ? { ...item, order_qty: item.order_qty + 1 } : item
-        ));
-      } else {
-        Swal.fire("⚠️ Stock Insufficient", "Not enough stock!", "warning");
-      }
-    } else {
-      setCart([...cart, { ...product, order_qty: 1 }]);
-    }
-  };
-
-  // Update cart quantity
-  const updateCartQuantity = (productId, change) => {
-    setCart(prevCart => {
-      return prevCart
-        .map(item => {
-          if (item.product_id === productId) {
-            const product = products.find(p => p.product_id === productId);
-            const newQuantity = item.order_qty + change;
-            if (newQuantity <= 0) return null; // remove
-            if (newQuantity > product.product_stock) {
-              Swal.fire("⚠️ Stock Insufficient", "Not enough stock!", "warning");
-              return item;
-            }
-            return { ...item, order_qty: newQuantity };
-          }
-          return item;
-        })
-        .filter(Boolean);
-    });
-  };
-
-  // Remove from cart
-  const removeFromCart = (productId) => {
-    setCart(cart.filter(item => item.product_id !== productId));
-  };
-
-  //========================= Submit order - FIXED VERSION===========================
-const onSubmitOrder = async () => {
-  if (window.__ordering) return;
-  window.__ordering = true;
-
-  if (cart.length === 0) {
-    window.__ordering = false;
-    return Swal.fire("មិនមានទំនិញ", "សូមបញ្ចូលទំនិញជាមុន!", "info");
-  }
-
-  const uniqueCart = Array.from(
-    new Map(cart.map(item => [item.product_id, item])).values()
-  );
-
-  try {
-    const orderData = {
-      items: uniqueCart.map(item => ({
-        product: item.product_id,
-        order_qty: item.order_qty
-      }))
-    };
-
-    const res = await fetch("https://backend-pos-api.onrender.com/api/make-order/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error("Server error " + res.status + ": " + text);
-    }
-
-    const data = await res.json();
-
-    // 🔹 Prepare invoice object
-    const invoice = {
-      id: Math.floor(Math.random() * 1000000), // generate invoice ID or use server ID
-      date: new Date().toLocaleString(),
-      items: data.orders.map(o => ({
-        product_name: o.product,
-        order_qty: o.qty,
-        product_price: o.price
-      })),
-      total: data.orders.reduce((sum, o) => sum + o.price * o.qty, 0)
-    };
-
-    // 🔹 Show invoice
-    showInvoice(invoice);
-
-    // Clear cart
-    setCart([]);
-    localStorage.removeItem("cart");
-
-  } catch (err) {
-    Swal.fire({
-      icon: "error",
-      title: "កំហុស",
-      text: err.message,
-    });
-
-  } finally {
-    window.__ordering = false;
-  }
-};
-
-
-  // Fixed showInvoice function
+  // --- មុខងារបង្ហាញវិក័យប័ត្រ ---
   const showInvoice = (invoice) => {
     Swal.fire({
-      title: `<h3 style="color:#fff; font-weight:bold; font-family: 'Khmer OS System', 'Khmer OS', 'Moul', 'Hanuman', sans-serif;">ការលក់ត្រូវបានបញ្ចប់</h3>`,
+     icon: "success",
+          title: "ការបញ្ជាទិញបានជោគជ័យ",
+          showConfirmButton: true,
+          timer: 10000,
+          background: "#fff",
+          color: "#333",
       html: `
-        <div style="
-          font-family: 'Kantumruy Pro', sans-serif;
-          background: rgba(255,255,255,0.9);
-          padding: 20px;
-          border-radius: 10px;
-          color: #333;
-          text-align: left;
-        ">
-          <h5 style="text-align:center; color:#6C63FF;">វិក័យប័ត្ត #${invoice.id}</h5>
-          <p><b>Invoice Date:</b> ${invoice.date}</p>
-
-          <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+        <div id="invoice-print" style="text-align: left; font-family: 'Khmer OS Content', sans-serif; font-size: 14px; border: 1px solid #ddd; padding: 15px;">
+          <h4 style="text-align: center;">វិក័យប័ត្រទូទាត់ប្រាក់</h4>
+          <p>លេខវិក័យប័ត្រ: #${invoice.id}</p>
+          <p>កាលបរិច្ឆេទ: ${invoice.date}</p>
+          <hr>
+          <table style="width: 100%; border-collapse: collapse;">
             <thead>
-              <tr style="background:#6C63FF; color:#fff;">
-                <th style="padding:8px; border:1px solid #ddd;">ឈ្មោះទំនិញ</th>
-                <th style="padding:8px; border:1px solid #ddd;">ចំនួនទំនិញ</th>
-                <th style="padding:8px; border:1px solid #ddd;">តម្លៃទំនិញ</th>
-                <th style="padding:8px; border:1px solid #ddd;">សរុប</th>
+              <tr style="border-bottom: 1px solid #eee;">
+                <th style="text-align: left;">ទំនិញ</th>
+                <th style="text-align: center;">ចំនួន</th>
+                <th style="text-align: right;">តម្លៃ</th>
               </tr>
             </thead>
             <tbody>
-              ${invoice.items
-                .map(
-                  (item) => `
+              ${invoice.items.map(item => `
                 <tr>
-                  <td style="padding:6px; border:1px solid #ddd;">${item.product_name}</td>
-                  <td style="padding:6px; border:1px solid #ddd; text-align:center;">${item.order_qty}</td>
-                  <td style="padding:6px; border:1px solid #ddd; text-align:right;">$${item.product_price}</td>
-                  <td style="padding:6px; border:1px solid #ddd; text-align:right;">$${(item.product_price * item.order_qty).toFixed(2)}</td>
-                </tr>`
-                )
-                .join("")}
+                  <td>${item.product_name}</td>
+                  <td style="text-align: center;">${item.order_qty}</td>
+                  <td style="text-align: right;">$${item.product_price}</td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
-
-          <h4 style="text-align:right; margin-top:15px; color:#6C63FF;">
-            សរុប: <b>$${invoice.total.toFixed(2)}</b>
-          </h4>
-        </div>
-        <div style='margin-top: 10%; text-align: center;'>
-          <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+          <hr>
+          <h5 style="text-align: right;">សរុប: $${invoice.total.toFixed(2)}</h5>
         </div>
       `,
-      icon: "success",
-      showCloseButton: true,
-      confirmButtonColor: "#6C63FF",
-      background: "linear-gradient(135deg, #9b5de5, #6C63FF)",
-      color: "#fff",
-      width: "700px",
+      showCancelButton: true,
+      confirmButtonText: '<i class="fa fa-print"></i> បោះពុម្ព',
+      cancelButtonText: 'បិទ',
+      confirmButtonColor: '#3085d6',
     }).then((result) => {
       if (result.isConfirmed) {
-        Swal.fire({
-          icon: "success",
-          title: "🖨️ បង្កេីតវិក័យប័តជោគជ័យ",
-          showConfirmButton: true,
-          timer: 2000,
-          background: "#fff",
-          color: "#333",
-        });
+        window.print(); // បោះពុម្ពទំព័រទាំងមូល ឬប្រើ Library ផ្សេងសម្រាប់បោះពុម្ពតែកន្ទុយសំបុត្រ
       }
     });
   };
 
-  // Render section
-  const renderSection = () => {
-     if (!isLoggedIn) {
-    return <LoginForm onLoginSuccess={() => setIsLoggedIn(true)} />;
+  const onSubmitOrder = async () => {
+    if (window.__ordering || cart.length === 0) return;
+    window.__ordering = true;
+
+    try {
+      const orderData = {
+        items: cart.map(item => ({
+          product: item.product_id,
+          order_qty: item.order_qty
+        }))
+      };
+
+      const res = await fetch("https://backend-pos-api.onrender.com/api/make-order/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!res.ok) throw new Error("ការបញ្ជាទិញមានបញ្ហា");
+
+      // បង្កើតទិន្នន័យ Invoice មុនពេលសម្អាត Cart
+      const invoiceData = {
+        id: Math.floor(Math.random() * 1000000),
+        date: new Date().toLocaleString(),
+        items: cart.map(item => ({
+          product_name: item.product_name,
+          order_qty: item.order_qty,
+          product_price: item.product_price
+        })),
+        total: cart.reduce((sum, item) => sum + (item.product_price * item.order_qty), 0)
+      };
+
+      await fetchProducts(); // ទាញយកស្តុកថ្មី
+      showInvoice(invoiceData); // បង្ហាញវិក័យប័ត្រ
+      setCart([]); // សម្អាត Cart
+      
+    } catch (err) {
+      Swal.fire("កំហុស", err.message, "error");
+    } finally {
+      window.__ordering = false;
+    }
+  };
+
+  if (!isLoggedIn) {
+    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
   }
+
+  const renderSection = () => {
     switch(activeSection) {
-      //============================================================
-     
-      //=============================================================
       case 'dashboard': 
-        return <Dashboard products={products} sales={sales} />;
+        return <Dashboard products={products} onProfileClick={handleLogout} />;
       case 'products':
         return (
           <Products 
             products={products} 
             onAddProduct={() => setShowAddProductModal(true)}
             onDeleteProduct={deleteProduct}
-            onEditProduct={(p) => {
-              setEditingProduct(p);
-              setShowAddProductModal(true);
-            }} 
+            onEditProduct={(p) => { setEditingProduct(p); setShowAddProductModal(true); }} 
           />
         );
       case 'pos': 
         return (
           <POS 
-            products={products}
-            cart={cart} 
+            products={products || []} 
+            cart={cart || []} 
             onAddToCart={addToCart}
             onUpdateCartQuantity={updateCartQuantity}
-            onRemoveFromCart={removeFromCart}
+            onRemoveFromCart={(id) => setCart(cart.filter(i => i.product_id !== id))}
             onSubmitOrder={onSubmitOrder} 
           />
         );
-      case 'sales': 
-        return <Sales sales={sales} />;
-      case 'inventory': 
-        return <Inventory products={products} />;
-      default: 
-        return <Dashboard products={products} sales={sales} />;
+      case 'sales': return <Sales sales={sales} />;
+      case 'inventory': return <Inventory products={products} />;
+      default: return <Dashboard products={products} onProfileClick={handleLogout} />;
     }
   };
 
@@ -329,30 +267,29 @@ const onSubmitOrder = async () => {
     <div className="container-fluid">
       <div className="row">
         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-        <div className="col-md-10 main-content">{renderSection()}</div>
+        <div className="col-md-10 main-content">
+          {renderSection()}
+        </div>
       </div>
 
       <AddProductModal
         show={showAddProductModal}
-        onHide={() => { 
-          setShowAddProductModal(false); 
-          setEditingProduct(null); 
-        }}
+        onHide={() => { setShowAddProductModal(false); setEditingProduct(null); }}
         editingProduct={editingProduct}
         onSubmit={async (formData) => {
-          if (editingProduct) {
-            await editProduct({
-              product_id: editingProduct.product_id,
-              product_name: formData.get('product_name'),
-              product_price: formData.get('product_price'),
-              product_stock: formData.get('product_stock'),
-              category_name: formData.get('category_name')
-            });
-          } else {
-            await addProduct(formData);
-          }
-          setShowAddProductModal(false);
-          setEditingProduct(null);
+            if (editingProduct) {
+                await editProduct({
+                    product_id: editingProduct.product_id,
+                    product_name: formData.get('product_name'),
+                    product_price: formData.get('product_price'),
+                    product_stock: formData.get('product_stock'),
+                    category_name: formData.get('category_name')
+                });
+            } else {
+                await addProduct(formData);
+            }
+            setShowAddProductModal(false);
+            setEditingProduct(null);
         }}
       />
     </div>
@@ -360,4 +297,3 @@ const onSubmitOrder = async () => {
 }
 
 export default App;
-

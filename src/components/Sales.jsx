@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import * as XLSX from 'xlsx'; // 1. Import XLSX
+import * as XLSX from 'xlsx';
 
 const Sales = ({ sales }) => {
   const [dateFilter, setDateFilter] = useState('');
   const [todayOrders, setTodayOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // --- ផ្នែកបន្ថែមសម្រាប់ Pagination ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // កំណត់ឱ្យបង្ហាញតែ ១០ ជួរ
 
   const fetchTodayOrders = async () => {
     setLoading(true);
@@ -28,7 +32,7 @@ const Sales = ({ sales }) => {
       setTodayOrders(normalized);
     } catch (error) {
       console.error('Error fetching today orders:', error);
-      setTodayOrders(sales); 
+      setTodayOrders(sales || []); 
     } finally {
       setLoading(false);
     }
@@ -52,9 +56,15 @@ const Sales = ({ sales }) => {
     ? todayOrders.filter(sale => new Date(sale.date).toISOString().split('T')[0] === dateFilter)
     : todayOrders;
 
-  // 2. Export Function
+  // --- គណនាសម្រាប់បែងចែកទំព័រ (Pagination Logic) ---
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredSales.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   const exportToExcel = () => {
-    // Prepare data for Excel
     const dataToExport = filteredSales.map(sale => ({
       'លេខវិក្កយបត្រ': `#${sale.id}`,
       'កាលបរិច្ឆេទ': new Date(sale.date).toLocaleString('km-KH'),
@@ -63,13 +73,9 @@ const Sales = ({ sales }) => {
       'សរុប ($)': calculateSaleTotal(sale).toFixed(2)
     }));
 
-    // Create Worksheet
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    // Create Workbook
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sales Report");
-    
-    // Download File
     const fileName = `Sales_Report_${dateFilter || 'All'}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
@@ -80,56 +86,46 @@ const Sales = ({ sales }) => {
     <div className="content-section">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0"><i className="fas fa-receipt me-2"></i>របាយការណ៍លក់</h2>
-        
         <div className="d-flex gap-2">
-          {/* 3. Export Button */}
-          <button 
-            className="btn btn-success d-flex align-items-center" 
-            onClick={exportToExcel}
-            disabled={filteredSales.length === 0}
-          >
+          <button className="btn btn-success d-flex align-items-center" onClick={exportToExcel} disabled={filteredSales.length === 0}>
             <i className="fas fa-file-excel me-2"></i>ទាញយក Excel
           </button>
-
           <button className="btn btn-outline-light d-flex align-items-center" onClick={fetchTodayOrders} disabled={loading}>
-            {loading ? (
-              <><div className="spinner-border spinner-border-sm me-2" />កំពុងផ្ទុក...</>
-            ) : (
-              <><i className="fas fa-sync-alt me-2"></i>ផ្ទុកទិន្នន័យថ្មី</>
-            )}
+            {loading ? <><div className="spinner-border spinner-border-sm me-2" />កំពុងផ្ទុក...</> : <><i className="fas fa-sync-alt me-2"></i>ផ្ទុកថ្មី</>}
           </button>
         </div>
       </div>
 
-      {/* Filter and Stats sections remain the same... */}
+      {/* Filter and Stats... */}
       <div className="row mb-4">
         <div className="col-md-4">
-          <div className="p-3 rounded-4" style={{ backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+          <div className="p-3 rounded-4" style={{ background: 'rgba(255,255,255,0.15)' }}>
             <label className="form-label text-light fw-bold mb-2">ជ្រើសថ្ងៃ</label>
-            <input type="date" className="form-control bg-transparent text-white border-light" value={dateFilter} onChange={e => setDateFilter(e.target.value)} />
+            <input type="date" className="form-control bg-transparent text-white border-light" value={dateFilter} onChange={e => { setDateFilter(e.target.value); setCurrentPage(1); }} />
           </div>
         </div>
       </div>
 
-      <div className="row mb-4 p-3 rounded-4 text-white bg-light">
+      <div className="row mb-4 p-3 rounded-4 text-white bg-light text-dark shadow-sm">
         <div className="col-4 text-center">
           <h4 className="fw-bold text-success">{filteredSales.length}</h4>
-          <small className='text-success'>ការលក់សរុប</small>
+          <small className='text-muted'>ការលក់សរុប</small>
         </div>
         <div className="col-4 text-center">
           <h4 className="fw-bold text-success">${todayRevenue.toFixed(2)}</h4>
-          <small className='text-success'>ចំណូលសរុប</small>
+          <small className='text-muted'>ចំណូលសរុប</small>
         </div>
         <div className="col-4 text-center text-success">
           <h4 className="fw-bold text-success">{filteredSales.reduce((sum, sale) => sum + calculateTotalQuantity(sale), 0)}</h4>
-          < small className='text-success'>ផលិតផលបានលក់</small>
+          <small className='text-muted'>ផលិតផលបានលក់</small>
         </div>
       </div>
 
+      {/* Table Section */}
       <div className="table-responsive">
         <table className="table text-white">
           <thead>
-            <tr>
+            <tr className='text-muted'>
               <th>លេខវិក្កយបត្រ</th>
               <th>កាលបរិច្ឆេទ</th>
               <th>ផលិតផល</th>
@@ -138,11 +134,11 @@ const Sales = ({ sales }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredSales.length === 0 ? (
+            {currentItems.length === 0 ? (
               <tr><td colSpan="5" className="text-center py-4 text-muted">មិនមានទិន្នន័យ</td></tr>
             ) : (
-              filteredSales.map(sale => (
-                <tr key={sale.id}>
+              currentItems.map(sale => (
+                <tr key={sale.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td>#{sale.id}</td>
                   <td>{new Date(sale.date).toLocaleString('km-KH')}</td>
                   <td>{sale.items.map(i => i.product_name).join(', ')}</td>
@@ -154,6 +150,37 @@ const Sales = ({ sales }) => {
           </tbody>
         </table>
       </div>
+
+      {/* --- ប៊ូតុង Back / Next (Pagination Controls) --- */}
+      {filteredSales.length > itemsPerPage && (
+        <div className="d-flex justify-content-between align-items-center mt-3 p-2">
+          <div className="text-muted small">
+             បង្ហាញជួរទី {indexOfFirstItem + 1} ដល់ {Math.min(indexOfLastItem, filteredSales.length)} នៃទិន្នន័យ {filteredSales.length}
+          </div>
+          <div className="btn-group">
+            <button 
+              className="btn btn-sm btn-outline-light" 
+              onClick={() => paginate(currentPage - 1)} 
+              disabled={currentPage === 1}
+            >
+              <i className="fas fa-chevron-left me-1"></i> ថយក្រោយ
+            </button>
+            
+            {/* បង្ហាញលេខទំព័រ (Optional) */}
+            <span className="btn btn-sm btn-light disabled text-dark">
+              ទំព័រ {currentPage} / {totalPages}
+            </span>
+
+            <button 
+              className="btn btn-sm btn-outline-light" 
+              onClick={() => paginate(currentPage + 1)} 
+              disabled={currentPage === totalPages}
+            >
+              បន្ទាប់ <i className="fas fa-chevron-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

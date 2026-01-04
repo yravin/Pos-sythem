@@ -49,9 +49,12 @@ const POS = ({ products, cart, onAddToCart, onUpdateCartQuantity, onRemoveFromCa
                     style={{ height: '150px', objectFit: 'cover' }}
                   />
                   <div className="card-body p-2">
-                    <h6 className="mb-1">{product.product_name}</h6>
-                    <p className="text-primary mb-0">${product.product_price}</p>
-                  </div>
+                  <h6 className="mb-1">{product.product_name}</h6>
+                  <div className="d-flex justify-content-between align-items-center">
+                   <p className="text-primary mb-0 font-weight-bold">${product.product_price}</p>
+                 <small className="text-muted">ស្តុក: {product.product_stock}</small> 
+              </div>
+             </div>
                 </div>
               </div>
             ))}

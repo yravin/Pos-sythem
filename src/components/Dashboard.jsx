@@ -1,47 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import './Css/Dashboard.css';
+import React, { useState, useEffect } from "react";
+import "./Css/Dashboard.css";
 
-const Dashboard = ({ products = [] }) => {
+const Dashboard = ({ products = [], onProfileClick }) => {
   const [todayOrders, setTodayOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ===== USER PROFILE =====
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({
+    name: "Admin User",
+  });
 
-  const fetchUserProfile = async (file) => {
-  try {
-    const formData = new FormData();
-    formData.append('image', file); // 
-
-    // ផ្ញើ POST request ទៅ server
-    const response = await fetch('https://example.com/api/upload', {
-      method: 'POST',
-      body: formData,
-      headers: {
-      },
-    });
-
-    const data = await response.json();
-    console.log('Response from server:', data);
-  } catch (error) {
-    console.error('Error uploading image:', error);
-  }
-};
-
-
-  // ===== TODAY ORDERS =====
   const fetchTodayOrders = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('https://backend-pos-api.onrender.com/api/today_orders/');
+      const response = await fetch(
+        "https://backend-pos-api.onrender.com/api/today_orders/"
+      );
       if (!response.ok) throw new Error();
 
       const data = await response.json();
 
-      const normalizedOrders = (data.orders || []).map(order => ({
+      const normalizedOrders = (data.orders || []).map((order) => ({
         id: order.id,
         order_datetime: order.order_datetime,
         product_name: order.product_name,
@@ -51,7 +32,7 @@ const Dashboard = ({ products = [] }) => {
 
       setTodayOrders(normalizedOrders);
     } catch {
-      setError('មិនអាចទាញទិន្នន័យបាន');
+      setError("មិនអាចទាញទិន្នន័យបាន");
       setTodayOrders([]);
     } finally {
       setLoading(false);
@@ -59,34 +40,30 @@ const Dashboard = ({ products = [] }) => {
   };
 
   useEffect(() => {
-    fetchUserProfile();
     fetchTodayOrders();
   }, []);
 
-  // ===== Calculations =====
+  // Calculations
   const todayRevenue = todayOrders.reduce(
     (sum, o) => sum + o.order_qty * o.order_price,
     0
   );
 
-  const totalItemsSold = todayOrders.reduce(
-    (sum, o) => sum + o.order_qty,
-    0
-  );
+  const totalItemsSold = todayOrders.reduce((sum, o) => sum + o.order_qty, 0);
 
-  const lowStock = products.filter(p => Number(p.product_stock) < 10).length;
+  const lowStock = products.filter((p) => Number(p.product_stock) < 10).length;
+
   const recentOrders = todayOrders.slice(-5).reverse();
 
   return (
     <div className="content-section animate__animated animate__fadeIn">
-     <div className="dashboard-header d-flex justify-content-between align-items-center mb-4 glass-card px-4 py-3">
+      {/* Header */}
+      <div className="dashboard-header d-flex justify-content-between align-items-center mb-4 glass-card px-4 py-3">
         <h3 className="mb-0">📊 ផ្ទាំងគ្រប់គ្រង</h3>
-        <div className="d-flex justify-content-end mb-4">
+
         <div className="nav-right d-flex align-items-center">
           <div className="user-info text-end me-3 d-none d-md-block">
-            <span className="d-block fw-bold text-dark">
-              {user?.name || 'Admin User'}
-            </span>
+            <span className="d-block fw-bold text-dark">{user.name}</span>
             <small className="text-success">
               <i className="fas fa-circle font-xs me-1"></i>
               Online
@@ -94,16 +71,17 @@ const Dashboard = ({ products = [] }) => {
           </div>
 
           <img
-            src='https://png.pngtree.com/png-vector/20240910/ourmid/pngtree-business-women-avatar-png-image_13805764.png'
+            src="https://png.pngtree.com/png-vector/20240910/ourmid/pngtree-business-women-avatar-png-image_13805764.png"
             alt="profile"
             className="rounded-circle"
             width="40"
             height="40"
+            style={{ cursor: "pointer" }}
+            onClick={onProfileClick}
           />
         </div>
       </div>
 
-        </div>      
       {/* ===== Top Stats ===== */}
       <div className="row g-4 mb-4">
         <div className="col-md-3 col-sm-6">
@@ -180,12 +158,16 @@ const Dashboard = ({ products = [] }) => {
                   </td>
                 </tr>
               ) : (
-                recentOrders.map(order => (
+                recentOrders.map((order) => (
                   <tr key={order.id}>
                     <td>#{order.id}</td>
-                    <td>{new Date(order.order_datetime).toLocaleString('km-KH')}</td>
+                    <td>
+                      {new Date(order.order_datetime).toLocaleString("km-KH")}
+                    </td>
                     <td>{order.product_name}</td>
-                    <td>${(order.order_qty * order.order_price).toFixed(2)}</td>
+                    <td>
+                      ${(order.order_qty * order.order_price).toFixed(2)}
+                    </td>
                     <td>
                       <span className="badge bg-success rounded-pill px-3 py-2">
                         បានបញ្ចប់

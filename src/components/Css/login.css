@@ -19,6 +19,7 @@
           min-height: 100vh;
           width: 140vh;
           padding: 20px;
+          margin-left: 300px;
         }
 
         .login-card {
@@ -29,6 +30,7 @@
           padding: 40px 35px;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
           animation: slideUp 0.5s ease-out;
+         
         }
 
         @keyframes slideUp {
